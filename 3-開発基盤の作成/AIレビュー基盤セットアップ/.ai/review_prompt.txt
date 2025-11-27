@@ -1,0 +1,850 @@
+# AI Code Review Request
+
+Review the following code diff using all repository rules.
+
+Follow the constraints defined in:
+
+1. **Instruction.md** (feature specification)
+2. **AGENTS.md** (repository-wide rules)
+
+---
+
+## 🔥 Instruction.md (Full Specification)
+# Implementation Instruction
+
+> **This document is the ONLY specification for the feature.**  
+> The AI must implement **strictly** according to this instruction and repository-wide rules  
+>
+> **Forbidden actions**
+> - Adding new features not described here  
+> - Guessing or assuming unspecified behavior  
+> - Refactoring unrelated code  
+> - Changing data structures unless explicitly stated  
+> - UI redesign  
+> - Modifying any logic or files outside the defined scope 
+
+---
+
+## 1. Overview
+Next.js development must be bootstrapped with an App Router, TypeScript, and Tailwind-based styling so the project can start. Provide the initial home page that renders simple introductory content using translation keys instead of hardcoded strings. Establish minimal translation utilities and configuration to support the page while keeping the structure aligned with the repository rules. This is a fresh setup, not an extension of an existing app.
+
+---
+
+## 2. Scope
+
+## 2.1 In Scope (MUST implement)
+
+> A complete list of implementation tasks derived from the seed requirements.  
+> This becomes the **only** set of tasks the AI is allowed to implement.
+
+- [ ] Initialize a Next.js App Router project with TypeScript, aligning folders under `src/` and enabling absolute imports via `@/*`.
+- [ ] Configure tooling for the new project: package scripts (`dev`, `build`, `start`, `lint`), ESLint setup compatible with Next.js/TypeScript, Tailwind/PostCSS config, and Next.js runtime config.
+- [ ] Add global styles using Tailwind (include base directives in `globals.css`) to support the initial page layout.
+- [ ] Implement a minimal translation setup: define translation types, a helper to fetch translations with a safe fallback, and an English translation file containing the home page copy keyed as `home.landing.*`.
+- [ ] Build the initial home page route using a domain component under `src/components/home/` that renders a heading and supporting text from translations; ensure the page file only wires the component and passes translation-derived props.
+- [ ] Provide app-wide layout metadata and icon asset needed by Next.js (e.g., default title/description reflecting project start).
+
+## 2.2 Out of Scope (MUST NOT implement)
+
+> Clearly lists everything that should NOT be included to prevent scope creep.
+
+- No additional pages, routes, or API endpoints beyond the home page.
+- No business logic, CSV/DB interactions, or persistence layers.
+- No integration with external services or authentication.
+- No redesign beyond the simple initial layout required; avoid advanced UI kits beyond base Tailwind unless required by scope.
+- No refactors or modifications to files/directories not listed in Section 3.
+- No performance tuning or build pipeline changes unrelated to the initial setup.
+
+---
+
+# 3. Affected Files & Locations
+
+> The AI may only create or modify files listed here.  
+> All other files are strictly off-limits.
+
+## 3.1 New Files
+- `package.json`: Project metadata, Next.js/React/TypeScript dependencies, and npm scripts.
+- `package-lock.json`: Locked dependency versions matching `package.json`.
+- `next.config.mjs`: Base Next.js configuration (App Router defaults, React strict mode).
+- `tsconfig.json`: TypeScript configuration enabling strict mode and `@/*` path aliasing into `src`.
+- `.eslintrc.json`: ESLint configuration compatible with Next.js and TypeScript.
+- `postcss.config.mjs`: PostCSS pipeline with Tailwind and autoprefixer.
+- `tailwind.config.ts`: Tailwind configuration pointing to `src/app`, `src/components`, and `src/utils`.
+- `src/app/layout.tsx`: Root layout wiring metadata, applying global styles, and rendering the app shell.
+- `src/app/page.tsx`: Home route that imports translations and renders the home component.
+- `src/app/globals.css`: Tailwind base/styles and minimal global styling tokens.
+- `src/app/icon.svg`: App icon asset referenced by Next.js metadata.
+- `src/components/home/HomePage.tsx`: Domain UI component for the home view that consumes translation-provided strings.
+- `src/types/translation.ts`: Type definitions for supported locales and translation maps.
+- `src/utils/translation.ts`: Helper to retrieve translation strings safely and select the active locale (default to English).
+- `assets/translations/en.ts`: English translation map with `home.landing` keys used by the UI.
+
+## 3.2 Modified Files
+- No pre-existing files require modification beyond what is listed above.
+
+## 3.3 Reference Only (MUST NOT modify)
+- `AGENTS.md`
+- `AI/templates/*`
+- `AI/ui/*`
+
+---
+
+# 4. Data Structures & Models
+
+> All relevant data definitions must be explicitly stated here.  
+> The AI must **not** add, remove, or alter fields unless stated in this section.
+
+## 4.1 TypeScript Interfaces / Types
+
+```ts
+export type Locale = "en";
+
+export type TranslationMap = Record<string, string>;
+
+export interface Translations {
+  locale: Locale;
+  entries: TranslationMap; // keys like "home.landing.title"
+}
+```
+
+## 4.2 CSV / Database Schema
+
+This feature does not interact with CSV or any database.
+
+---
+
+# 5. Logic Specification
+
+## 5.1 Inputs
+
+- Active locale (default `en`; no user input).
+- Translation entries from `assets/translations/en.ts`.
+
+## 5.2 Processing Flow (Strict Order)
+
+1. Select the default locale (`en`) and load the corresponding translation entries.
+2. Use the translation helper to resolve required keys (`home.landing.title`, `home.landing.subtitle`, `home.landing.cta` as needed) with fallback text when missing.
+3. Pass the resolved strings as props to the home component.
+4. Render the home component within the root layout using the global styles.
+
+## 5.3 Outputs
+
+- Rendered home page HTML with translated heading and supporting text.
+- Metadata values (title/description) for the app, derived from translations.
+
+## 5.4 Error Handling
+
+- If a translation key is missing, return a safe fallback string (e.g., the key itself or a short missing-text marker) without throwing.
+- No other runtime errors are expected; logic remains synchronous and local.
+
+---
+
+# 6. UI Specification (If applicable)
+
+## 6.1 Component Structure
+
+- `HomePage` (React server component) props:
+  - `title: string`
+  - `subtitle: string`
+  - `ctaLabel?: string` (optional)
+- Internal state: none.
+- Layout-only responsibilities; no data fetching or side effects.
+
+## 6.2 Layout & Behavior
+
+- Display a primary heading and supporting paragraph using translated strings.
+- Optionally render a single call-to-action button/link styled with Tailwind if `ctaLabel` is provided.
+- Layout should be responsive with sensible spacing and centered content; rely on Tailwind utility classes.
+- No navigation, modals, or forms; static content only.
+
+## 6.3 Translations
+
+- All visible text must be sourced from translation keys:
+  - `home.landing.title`
+  - `home.landing.subtitle`
+  - `home.landing.cta` (if a CTA is shown)
+- Translation strings live in `assets/translations/en.ts`; UI reads via the translation helper.
+
+---
+
+# 7. Edge Cases & Constraints
+
+- Missing translation keys must not crash the page; provide a readable fallback.
+- Unsupported locales should fall back to the default (`en`) without error.
+- Avoid client-side only features; keep components compatible with Next.js server components.
+- Keep functions small and straightforward per repository rules.
+- Do not introduce hardcoded UI strings; all copy comes from translations.
+
+---
+
+# 8. Acceptance Criteria (Definition of Done)
+
+- All items in **Section 2.1 (In Scope)** are fully implemented.
+- Only files listed in **Section 3** are created or modified.
+- Translation types and helper match **Section 4**; locale defaults to `en`.
+- Home page rendering follows the flow in **Section 5** with safe fallbacks.
+- UI matches **Section 6**: heading + supporting text (and optional CTA) using translations and Tailwind layout.
+- No CSV/DB interactions exist.
+- Code adheres to `AGENTS.md`, TypeScript strict mode, and Next.js conventions; no `any` usage.
+- No lint errors; npm scripts run successfully (`npm run lint`, `npm run build` should pass after setup).
+- No unused code or TODOs; no hardcoded UI text outside translation files.
+
+---
+
+# 9. Questions / Ambiguities
+
+- [ ] Confirm that English (`en`) is the only required locale for now; if additional locales are needed, specify them.
+- [ ] Specify preferred CTA presence/text on the home page (or confirm it can be omitted), to avoid guessing content length.
+
+---
+
+## 🧠 AGENTS.md (Repository Rules)
+# AGENTS.md (Repository Guidelines)
+AI Coding and Review Agent Guidelines
+
+---
+
+## 1. Purpose
+Act as the coding/review agent for this repository. Implement only the task requirements while following Repository Guidelines and AI/task/. Prioritize precision, consistency, and safety.
+
+---
+
+## 2. Global Principles
+### Architecture & Project Rules
+- Structure: `src/` (App Router under `src/app`, shared UI in `src/components`, utilities `src/utils`, types `src/types`), `logic/` (domain rules), `db/` (CSV data), `assets/` (static; translations in `assets/translations/<lang>.ts`), `tests/`, `scripts/`, `AI/`, `AI/task/` (work items), `requirements.txt`. Use absolute imports `@/*`; do not write outside these directories.
+- Pages contain no business logic; domain UI lives in `src/components/<domain>`; logic lives in `logic/`; API routes are placed only under `src/app/api/**/route.ts` and call `logic/`. Frontend uses shadcn/ui as the primary UI kit; wrap components in `src/components/ui`.
+- UI text is never hardcoded; use keys `<domain>.<feature>.<element>`. Prefer Tailwind composition over custom CSS.
+
+### Coding Philosophy
+- TypeScript strict must stay enabled. Enforce DRY/KISS/YAGNI, thin abstractions, and single responsibility per file. CRUD-style functions in `logic/` or `src/utils/` should aim for ≤40 lines and ≤80 chars per line (UI exempt). All functions require JSDoc (summary, params, returns, errors if non-Result). Comments in English, focus on “why.”
+- Naming: Components/types PascalCase; logic/utils camelCase; DB helpers snake_case; API routes `route.ts`; CSS kebab-case.
+
+### Reasoning & Depth
+- Prefer deep, deliberate reasoning over speed or brevity.
+- Before implementing non-trivial changes, derive a short mental plan: requirements, affected files, data flow, failure paths, and edge cases.
+- Always consider error paths, concurrency risks, and data consistency, even if they are not explicitly mentioned in the task.
+- When unsure, make assumptions explicit and ask to confirm rather than silently guessing.
+
+### Data & CSV Rules
+- No remote DB; persist CSVs in `db/` (UTF-8, LF). First row is headers and includes `order`. IDs are UUIDv4 via `generateId()`. Do not quote CSV strings; nulls are empty strings.
+- All file IO goes through `src/utils/csv/`: read all → append/write all; update by ID replacement; delete by filtering; keep header-to-key 1:1.
+
+### Error Handling & Logging
+- Logic returns `Result<T>` (shared utility type); throwing inside `logic/` or `src/utils/` is forbidden. CSV failures return error `Result<null>`. UI handles failures at boundaries. Error messages are short, technical, English. Use `console.error` for errors.
+
+### Testing Rules
+- Add tests after features stabilize. Test logic only: unit for pure functions, repository for CSV IO, integration for task/project flows (create → CSV → read → delete). Mirror `logic/` and `src/utils/` under `tests/`; use fixtures in `tests/fixtures/`.
+- CI on every PR: `npm ci && npm run lint && npm test`; must pass before merging.
+
+---
+
+## 3. Allowed Behaviors
+- Modify only files explicitly in scope. Implement described features exactly with minimal code. Follow all conventions and architecture rules. During AI reviews, output comments only (no source edits).
+
+---
+
+## 4. Disallowed Behaviors
+- Touching files or logic outside scope; refactors/renames/optimizations without request.
+- Hardcoded UI strings; mixing UI and business logic; writing outside allowed directories.
+- Changing CSV structure/headers; adding features not specified; returning outputs in unrequested formats.
+
+---
+
+## 5. Output Rules
+- Implementation tasks:
+  - If CLI/scripts explicitly say “summary only,” return only the summary.
+  - Otherwise, include code in outputs as directed (full file, diff, etc.).
+- Review tasks: bullet issues only (no code or diffs).
+- Always honor system/developer guidance.
+- Prefix every response with the current mode, e.g., `[MODE: Implement]`, `[MODE: Implementation Review]`, `[MODE: Test Review]`, `[MODE: Meta Review]`, `[MODE: Refactor]`, `[MODE: Instruction Build]`.
+
+---
+
+## 6. Development Modes
+### 6.1 Implement
+- Purpose: deliver the scoped feature exactly as defined.
+- Inputs: `AI/task/instruction.md`, assets in `AI/task/ui/*`.
+- Outputs: required code changes only (no refactors outside scope).
+- Constraints: no behavior beyond the instruction; no refactors outside scope; ask when unclear; no new features. for non-trivial changes, think through a brief implementation plan before writing code.
+- Mode tag: `[MODE: Implement]`.
+
+### 6.2 Implementation Review
+- Purpose: surface implementation issues only.
+- Inputs: `.ai/diff.txt`, `.ai/review_prompt.txt`.
+- Outputs: bullet issues only (no code).
+- Checks: spec alignment, security, TS strict risks, error handling, CSV/IO consistency, logic consistency, recommended tests.
+- Mode tag: `[MODE: Implementation Review]`.
+
+### 6.3 Test Review
+- Purpose: evaluate test coverage and fidelity.
+- Inputs: `.ai/diff.txt`, `.ai/review_prompt.txt`.
+- Outputs: bullet issues only (no code).
+- Checks: normal/abnormal/boundary coverage, fixture design, CSV write/read round-trip, `Result` error branches.
+- Mode tag: `[MODE: Test Review]`.
+
+### 6.4 Meta Review
+- Purpose: assess architecture and adherence to rules.
+- Inputs: Meta Review may reference the entire repository when necessary
+(AGENTS.md, src/, logic/, app/, db/, components/, etc.)
+to evaluate architectural consistency, naming, boundaries, and long-term maintainability.
+- Outputs: bullet issues only (no code); no feature proposals.
+- Checks: architecture fitness, naming, UI/logic/IO boundaries, guideline compliance.
+- Mode tag: `[MODE: Meta Review]`.
+
+### 6.5 Refactor
+- Purpose: refactor within the specified scope only.
+- Inputs: `AI/task/instruction.md`, assets in `AI/task/ui/*`, latest review comments.
+- Outputs: refactor changes without altering behavior or external contracts.
+- Constraints: do not touch unspecified files/dirs; minimal renames with clear need; no new features; function splits only if responsibilities stay coherent; comment “why” in English if noting reasons.
+- Mode tag: `[MODE: Refactor]`.
+
+### 6.6 Instruction Build
+- Purpose: transform `AI/task/seed.md` into `AI/task/instruction.md` as the sole implementation spec.
+- Inputs: `AI/task/seed.md`, `AI/task/templates/instruction_template.md`, assets in `AI/task/ui/*` if present.
+- Outputs: instruction only, formatted per `AI/task/templates/instruction_template.md`; no code.
+- Must include:
+  - requirement breakdown (in-scope / out-of-scope)
+  - what to implement / what not to implement
+  - affected files / directories
+  - data structures & state
+  - processing flows
+  - UI specs (if any)
+  - business rules
+  - edge cases & constraints
+  - acceptance criteria
+- Constraints: no refactor/design changes; do not invent beyond the seed—ask if unclear.
+- Mode tag: `[MODE: Instruction Build]`.
+
+---
+
+## 7. Task Workflow (AI/task)
+- Work items live in `AI/task/`.
+- `AI/task/seed.md` contains the feature summary.
+- To produce an instruction:
+  - fill `AI/task/templates/instruction_template.md` using the content of `AI/task/seed.md`;
+  - output as `AI/task/instruction.md`.
+- During implementation, follow `AI/task/instruction.md` and any assets in `AI/task/ui/*`.
+
+---
+
+## 8. Safety
+- Ask when uncertain; do not guess. Keep dependency versions pinned in `package-lock.json`; list Python deps (if any) in `requirements.txt`.
+
+---
+
+## 9. Branch Strategy (Developers)
+- Branch naming: `feature/*`, `fix/*`, `refactor/*`, `chore/*`.
+- No direct pushes to `main`; work on `dev`, merge to `main` when stable.
+- One branch per feature/refactor. AI does not participate here.
+
+---
+
+## 10. PR Guidelines (Developers)
+- Keep PR scope tight (aim ≤200 lines). Include summary, rationale, key changes, tests run, linked issues, UI screenshots when applicable.
+- AI does not create PRs; developers own PR content and decisions.
+
+---
+
+### 11. AI Review Rules (AI)
+- Run reviews only after a PR exists and CI has passed.
+
+- Implementation Review / Test Review:
+    - Use only the following as sources:
+        - `.ai/diff.txt`
+        - `.ai/review_prompt.txt`
+    - Do not inspect the rest of the repository directly.
+
+- Meta Review:
+    - Exception: Meta Review may examine the entire repository
+      (Conventions.md, AGENTS.md, src/, logic/, app/, db/, components/, etc.)
+      to assess architectural consistency, naming, boundaries, and long-term design fitness.
+
+- Always state the active review mode.
+- Output bullet-point issues only; do not provide code fixes.
+
+### 11.1 Implementation Review
+- Inputs: `.ai/diff.txt`, `.ai/review_prompt.txt`.
+- Focus areas:
+  - Alignment with the intended specification.
+  - Separation of responsibilities in logic.
+  - Risks under TS strict mode.
+  - Error handling behavior and failure paths.
+  - CSV/IO consistency and safety.
+  - Security risks.
+  - Side effects/concurrency risks (e.g., shared mutable state, race conditions).
+  - Compliance with line-count and line-length guidelines.
+  - Proper UI → logic boundary.
+- Output: bullet issues with concise rationale; no code.
+
+### 11.2 Test Review
+- Inputs: `.ai/diff.txt`, `.ai/review_prompt.txt`.
+- Focus areas:
+  - Coverage of normal, abnormal, and boundary conditions.
+  - CSV/IO write-read reproducibility.
+  - Coverage of `Result` error branches.
+  - Adherence to a mock-first or isolation-friendly testing approach when applicable.
+- Output: bullet issues with concise rationale; no code.
+
+### 11.3 Meta Review
+- Inputs: Meta Review may reference the entire repository when necessary
+(AGENTS.md, src/, logic/, app/, db/, components/, etc.)
+to evaluate architectural consistency, naming, boundaries, and long-term maintainability.
+- Focus areas:
+  - Alignment with the documented guidelines and task instructions.
+  - Design direction and overall fitness.
+  - Separation of responsibilities.
+  - Component and module boundaries.
+  - Naming consistency.
+  - Abstraction depth (no over- or under-abstraction).
+  - DRY/KISS/YAGNI adherence.
+  - Hidden technical debt.
+  - Clarity of structure and long-term maintainability.
+- Timing: as needed, ideally on a periodic basis.
+- Output: bullet issues with rationale only; no code.
+- Forbidden in Meta Review:
+  - Micro-tuning (tiny renames or trivial tweaks).
+  - Vague or non-actionable comments.
+  - Comments without clear, grounded rationale.
+  - Excessive or speculative suggestions.
+  - Proposing architectural changes unless explicitly requested.
+
+---
+
+## 12. Commands
+- `npm install`, `npm run dev`, `npm run lint`, `npm run build`, `npm start`. Prefer `npm run` scripts over ad-hoc commands. Keep dependency versions pinned in `package-lock.json`; list Python deps (if any) in `requirements.txt`.
+
+---
+
+## 📝 Local Git Diff
+diff --git a/AI/seed.md b/AI/seed.md
+deleted file mode 100644
+index 879efa3..0000000
+--- a/AI/seed.md
++++ /dev/null
+@@ -1,33 +0,0 @@
+-# Feature Seed
+-
+-## 1. Summary (必須・短く)
+-プロジェクトを開始する。
+----
+-
+-## 2. Purpose / 背景
+-next.jsでの開発を開始するために、コマンドを実行し、最初のページを作成する。デザインは適当で構わない。
+-
+----
+-
+-## 3. Requirements (箇条書きでOK)
+-AGENTS.mdを参照する
+-
+-
+----
+-
+-## 4. Scope
+-### In Scope
+-
+-### Out of Scope
+-
+----
+-
+-## 5. UI Notes (あれば)
+-
+-
+----
+-
+-## 6. Edge Cases / Constraints
+-
+-
+-
+diff --git a/AI/templates/instruction_template.md b/AI/templates/instruction_template.md
+deleted file mode 100644
+index a72d4ec..0000000
+--- a/AI/templates/instruction_template.md
++++ /dev/null
+@@ -1,287 +0,0 @@
+-# Implementation Instruction
+-
+-> **This document is the ONLY specification for the feature.**  
+-> The AI must implement **strictly** according to this instruction and repository-wide rules  
+->
+-> **Forbidden actions**
+-> - Adding new features not described here  
+-> - Guessing or assuming unspecified behavior  
+-> - Refactoring unrelated code  
+-> - Changing data structures unless explicitly stated  
+-> - UI redesign  
+-> - Modifying any logic or files outside the defined scope 
+-
+----
+-
+-## 1. Overview
+-> A concise 2–4 sentence description summarizing the feature based on the seed.  
+-> Must describe:
+-> - The problem this feature solves  
+-> - The purpose  
+-> - High-level behavior  
+-> - Whether it extends or interacts with an existing feature  
+-
+----
+-
+-## 2. Scope
+-
+-## 2.1 In Scope (MUST implement)
+-
+-> A complete list of implementation tasks derived from the seed requirements.  
+-> This becomes the **only** set of tasks the AI is allowed to implement.
+-
+-- [ ] Feature A: …  
+-- [ ] UI component(s): …  
+-- [ ] API or logic additions: …  
+-- [ ] CSV/DB operations: …  
+-- [ ] State updates / side effects: …  
+-
+-## 2.2 Out of Scope (MUST NOT implement)
+-
+-> Clearly lists everything that should NOT be included to prevent scope creep.
+-
+-- No refactoring of unrelated code  
+-- No renaming existing identifiers  
+-- No changes to UI beyond what is defined in In Scope  
+-- No new endpoints or data models not explicitly listed  
+-- No design or layout overhaul  
+-- No performance optimization unless required  
+-- No modification of files not listed in Section 3  
+-
+----
+-
+-# 3. Affected Files & Locations
+-
+-> The AI may only create or modify files listed here.  
+-> All other files are strictly off-limits.
+-
+-## 3.1 New Files
+-- `path/to/newFile.tsx`: purpose  
+-- `logic/.../newLogic.ts`: purpose  
+-
+-## 3.2 Modified Files
+-- `src/.../ExistingComponent.tsx`: what will be changed and why  
+-- `logic/.../existingLogic.ts`: what will be changed and why  
+-
+-## 3.3 Reference Only (MUST NOT modify)
+-- `AGENTS.md`  
+-
+-- Other related reference files  
+-
+-
+----
+-
+-# 4. Data Structures & Models
+-
+-> All relevant data definitions must be explicitly stated here.  
+-> The AI must **not** add, remove, or alter fields unless stated in this section.
+-
+-## 4.1 TypeScript Interfaces / Types
+-
+-```ts
+-// Example — replace with actual structures for this feature
+-export interface Example {
+-  id: string;       // UUID
+-  name: string;     // Non-empty
+-  status: "active" | "inactive";
+-}
+-```
+-
+-## 4.2 CSV / Database Schema
+-
+-If this feature interacts with CSV:
+-
+-- **Target file:** `db/<filename>.csv`
+-- **Column order (MUST NOT change):**
+-  1. `id`
+-  2. `name`
+-  3. `status`
+-
+-**Constraints:**
+-
+-- `id` must be unique  
+-- `name` must not be empty  
+-- `status` must match the defined enum values  
+-- CSV write operations must **preserve header and column order**  
+-- Only one atomic write is allowed (`read → modify → write`)  
+-
+-If this feature interacts with a database instead, specify:
+-
+-- Table name  
+-- Columns with types  
+-- Primary keys  
+-- Unique constraints  
+-- Foreign keys  
+-- Default values  
+-- Nullable / non-nullable rules  
+-
+-
+-
+----
+-
+-# 5. Logic Specification
+-
+-## 5.1 Inputs
+-
+-List all inputs the logic receives:
+-
+-- UI form values  
+-- Route parameters  
+-- API request bodies  
+-- Existing CSV/DB data  
+-- Component props  
+-- Function arguments  
+-
+-Example:
+-
+-- `{ name: string; status: "active" | "inactive" }`  
+-- URL parameter: `id: string`  
+-- CSV rows loaded from `db/example.csv`  
+-
+-
+-## 5.2 Processing Flow (Strict Order)
+-
+-> The AI must follow this exact sequence.  
+-> Reordering, merging, or skipping steps is forbidden.
+-
+-1. Validate input  
+-2. Load existing CSV/DB records  
+-3. Validate domain constraints (e.g., duplicates, required fields)  
+-4. Construct the new or updated record  
+-5. Perform one atomic write to CSV/DB  
+-6. Return a structured `Result<T>`  
+-
+-
+-## 5.3 Outputs
+-
+-The feature must produce:
+-
+-- A `Result<T>` object  
+-- The updated or newly created record  
+-- Any necessary UI state updates  
+-- Updated CSV/DB contents where applicable  
+-
+-
+-## 5.4 Error Handling
+-
+-All errors must follow the project’s unified `Result<T>` pattern.
+-
+-Expected error types:
+-
+-- `VALIDATION_ERROR`  
+-- `DUPLICATE_NAME`  
+-- `NOT_FOUND`  
+-- `IO_ERROR`  
+-
+-UI handling rules:
+-
+-- Validation errors → Keep modal/dialog open, show message  
+-- IO errors → Preserve input, show generic message  
+-- Must NOT auto-close on error  
+-
+----
+-
+-# 6. UI Specification (If applicable)
+-
+-## 6.1 Component Structure
+-
+-Define:
+-
+-- Component name  
+-- Props  
+-- Internal state  
+-- How the component interacts with logic  
+-
+-Example of props:
+-
+-- `open: boolean`  
+-- `onClose: () => void`  
+-- `onSuccess: (record: Example) => void`  
+-
+-Internal state examples:
+-
+-- `name`  
+-- `status`  
+-- `isSubmitting`  
+-
+-
+-## 6.2 Layout & Behavior
+-
+-Describe:
+-
+-- Required form fields  
+-- Input validation behavior  
+-- Button behavior (primary / secondary)  
+-- Disabled/Loading states  
+-- Modal/dialog open/close rules  
+-- What happens after success  
+-- What happens after errors  
+-- Navigation behavior (if any)  
+-
+-
+-## 6.3 Translations
+-
+-All UI text must use translation keys.  
+-**Hard-coded text is strictly forbidden.**
+-
+-Examples:
+-
+-ui.example.title
+-ui.example.form.name
+-ui.common.save
+-ui.common.cancel
+-error.example.duplicateName
+-
+----
+-
+-# 7. Edge Cases & Constraints
+-
+-The implementation must handle:
+-
+-- Empty or whitespace-only input  
+-- Duplicate names (case-insensitive)  
+-- Missing CSV → create file with header  
+-- Corrupted CSV → return IO error  
+-- Large CSV files → avoid O(N²) logic  
+-- Atomic write requirements (read → modify → write)  
+-- Invalid or missing IDs  
+-- Unexpected null/undefined values  
+-- UI interactions while loading (disable buttons)  
+-
+----
+-
+-# 8. Acceptance Criteria (Definition of Done)
+-
+-The feature is considered complete only if:
+-
+-- All items in **Section 2.1 (In Scope)** are fully implemented  
+-- No scope creep: nothing outside In Scope is added  
+-- Only files listed in **Section 3** were modified  
+-- All data structures match **Section 4** exactly  
+-- Logic follows **Section 5** step-by-step  
+-- UI matches **Section 6**  
+-- All edge cases in **Section 7** handled  
+-- Code follows:
+-  - AGENTS.md rules  
+-  - Conventions.md  
+-  - TypeScript strict mode (no `any`)  
+-  - CSV & Result patterns  
+-- No lint errors  
+-- No unused variables or dead code  
+-- No TODOs remaining  
+-- No hard-coded text (must use translation keys)  
+-
+----
+-
+-# 9. Questions / Ambiguities
+-
+-> If any part of the seed is incomplete, unclear, or conflicting,  
+-> AI must list the questions here instead of making assumptions.  
+-> Implementation must NOT begin until all questions are resolved.
+-
+-- [ ] Question 1  
+-- [ ] Question 2  
+-- [ ] Missing data definition  
+-- [ ] Ambiguous UI behavior  
+-- [ ] Unclear constraints  
+-
+diff --git a/AI/templates/seed_empty.md b/AI/templates/seed_empty.md
+deleted file mode 100644
+index 60f0aba..0000000
+--- a/AI/templates/seed_empty.md
++++ /dev/null
+@@ -1,35 +0,0 @@
+-# Feature Seed
+-
+-## 1. Summary (必須・短く)
+-
+----
+-
+-## 2. Purpose / 背景
+-
+----
+-
+-## 3. Requirements (箇条書きでOK)
+-
+----
+-
+-## 4. Scope
+-### In Scope
+-
+-### Out of Scope
+-
+----
+-
+-## 5. UI Notes (あれば)
+-
+----
+-
+-## 6. Data
+-
+----
+-
+-## 7. Edge Cases / Constraints
+-
+----
+-
+-## 8. Acceptance Criteria
+-
+diff --git a/AI/templates/seed_template.md b/AI/templates/seed_template.md
+deleted file mode 100644
+index d44e8a1..0000000
+--- a/AI/templates/seed_template.md
++++ /dev/null
+@@ -1,52 +0,0 @@
+-# Feature Seed
+-
+-## 1. Summary (必須・短く)
+-実装したい機能の超要約を1〜2行で書く。
+-
+-例: プロジェクト一覧ページに新規プロジェクト作成フォームを追加する。
+-
+----
+-
+-## 2. Purpose / 背景
+-この機能がなぜ必要なのか、目的を簡潔に。
+-
+----
+-
+-## 3. Requirements (箇条書きでOK)
+-実装したい仕様を人間の文章でそのまま書く。
+-
+-- 例: 新規プロジェクトを名前入力で作成できること
+-- 例: 作成後は一覧に即座に反映されること
+-
+----
+-
+-## 4. Scope
+-### In Scope
+-機能として実装すべきこと。
+-
+-### Out of Scope
+-今回含めないもの（Instruction Build の暴走防止）。
+-
+----
+-
+-## 5. UI Notes (あれば)
+-テキストでざっくり書く or `AI/task/ui/` に画像を置く。
+-
+----
+-
+-## 6. Data
+-関係するデータ（CSV/型/パラメータなど）。
+-
+----
+-
+-## 7. Edge Cases / Constraints
+-想定される制約や例外。
+-
+----
+-
+-## 8. Acceptance Criteria
+-完了の定義（Done の判定基準）。
+-
+-
+-
+-
+
